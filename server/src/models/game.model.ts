@@ -9,7 +9,7 @@ interface GameAttributes {
   release_date?: Date;
   publisher?: string;
   thumbnail?: string;
-  avg_user_score: number;
+  avg_user_rating: number;
   popularity_score: number;
   trending_score: number;
   created_by: string;
@@ -25,7 +25,7 @@ class Game extends Model<GameAttributes, GameCreationAttributes> implements Game
   public release_date?: Date;
   public publisher?: string;
   public thumbnail?: string;
-  public avg_user_score!: number;
+  public avg_user_rating!: number;
   public popularity_score!: number;
   public trending_score!: number;
   public created_by!: string;
@@ -59,7 +59,7 @@ Game.init(
     thumbnail: {
       type: DataTypes.STRING,
     },
-    avg_user_score: {
+    avg_user_rating: {
       type: DataTypes.DECIMAL,
       defaultValue: 0,
     },

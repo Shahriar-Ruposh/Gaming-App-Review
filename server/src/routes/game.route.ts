@@ -1,26 +1,23 @@
 import { Router } from "express";
 import { authenticate } from "../middleware/auth.middleware";
+import { createGameValidator, updateGameValidator } from "../validators/game.validators";
+import { getAllGames, getGameById, createGame, updateGame, deleteGame } from "../controllers/game.controller";
+// getAllGames
+// getGameById
+// createGame
+// updateGame
+// deleteGame
 
 const router = Router();
 
-router.get("/", (req, res) => {
-  res.json({ message: "Game route" });
-});
+router.get("/", getAllGames);
 
-router.get("/:id", (req, res) => {
-  res.json({ message: "Single Game route" });
-});
+router.get("/:id", getGameById);
 
-router.post("/:id", authenticate, (req, res) => {
-  res.json({ message: "Create Game route" });
-});
+router.post("/", createGameValidator, authenticate, createGame);
 
-router.put("/:id", authenticate, (req, res) => {
-  res.json({ message: "Update Game route" });
-});
+router.put("/:id", updateGameValidator, authenticate, updateGame);
 
-router.delete("/:id", authenticate, (req, res) => {
-  res.json({ message: "Delete Game route" });
-});
+router.delete("/:id", authenticate, deleteGame);
 
 export default router;
