@@ -31,4 +31,4 @@ GameGenre.init(
   }
 );
 
-export default GameGenre;
+export { GameGenre, GameGenreAttributes };

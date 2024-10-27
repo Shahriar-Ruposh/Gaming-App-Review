@@ -55,4 +55,4 @@ Review.init(
   }
 );
 
-export default Review;
+export { Review, ReviewAttributes };
