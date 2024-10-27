@@ -15,7 +15,7 @@ router.post("/google-login", googleLoginValidator, authController.googleLogin);
 
 router.post("/forgot-password", forgotPasswordValidator, authController.forgotPassword);
 
-router.post("/reset-password", resetPasswordValidator, authController.resetPassword);
+router.post("/reset-password", authenticate, resetPasswordValidator, authController.resetPassword);
 
 router.post("/logout", authenticate, authController.logout);
 

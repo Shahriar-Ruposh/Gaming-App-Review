@@ -9,7 +9,7 @@ export const sendEmail = async (to: string, subject: string, text: string) => {
     service: "gmail",
     auth: {
       user: "butterflies.butterflies.205@gmail.com",
-      pass: "qneh baqc wqyu xces",
+      pass: "cckz dafp ajmg savm",
     },
   });
 
@@ -20,4 +20,4 @@ export const sendEmail = async (to: string, subject: string, text: string) => {
     text,
   });
 };
-// pass: "qneh baqc wqyu xces"
+// pass: "cckz dafp ajmg savm"

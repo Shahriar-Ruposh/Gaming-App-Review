@@ -2,11 +2,6 @@ import { Router } from "express";
 import { authenticate } from "../middleware/auth.middleware";
 import { createGameValidator, updateGameValidator } from "../validators/game.validators";
 import { getAllGames, getGameById, createGame, updateGame, deleteGame } from "../controllers/game.controller";
-// getAllGames
-// getGameById
-// createGame
-// updateGame
-// deleteGame
 
 const router = Router();
 
