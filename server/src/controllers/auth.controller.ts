@@ -2,9 +2,9 @@ import { Request, Response } from "express";
 import jwt from "jsonwebtoken";
 import { OAuth2Client } from "google-auth-library";
 import { User, UserAttributes } from "../models/user.model";
-import { generateOTP, sendEmail } from "../utils/helpers";
+import { generateOTP, sendEmail } from "../utils/email.helper";
 
-const JWT_SECRET = process.env.JWT_SECRET || "your-secret-key";
+const JWT_SECRET = process.env.JWT_SECRET || "secret-key";
 const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID || "";
 const client = new OAuth2Client(GOOGLE_CLIENT_ID);
 
@@ -50,6 +50,7 @@ export const verifyEmail = async (req: Request, res: Response) => {
     }
 
     user.isVerified = true;
+    user.isActive = true;
     user.otp = null;
     user.otpExpiry = null;
     await user.save();

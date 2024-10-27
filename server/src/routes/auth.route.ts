@@ -1,7 +1,7 @@
 import { Router } from "express";
-import * as authController from "../controllers/authController";
-import { authenticate } from "../middleware/auth";
-import { registerValidator, verifyEmailValidator, loginValidator, googleLoginValidator, forgotPasswordValidator, resetPasswordValidator } from "../utils/validators";
+import * as authController from "../controllers/auth.controller";
+import { authenticate } from "../middleware/auth.middleware";
+import { registerValidator, verifyEmailValidator, loginValidator, googleLoginValidator, forgotPasswordValidator, resetPasswordValidator } from "../validators/auth.validators";
 
 const router = Router();
 
