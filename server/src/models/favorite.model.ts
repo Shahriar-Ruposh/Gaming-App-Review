@@ -44,4 +44,4 @@ Favorite.init(
   }
 );
 
-export default Favorite;
+export { Favorite, FavoriteAttributes };

@@ -1,11 +1,11 @@
 import sequelize from "../config/db";
 import { User } from "./user.model";
-import Game from "./game.model";
-import Genre from "./genre.model";
-import GameGenre from "./gameGenres.model";
-import Review from "./review.model";
-import Favorite from "./favorite.model";
-import UserGameVisit from "./userGameVisit.model";
+import { Game } from "./game.model";
+import { Genre } from "./genre.model";
+import { GameGenre } from "./gameGenres.model";
+import { Review } from "./review.model";
+import { Favorite } from "./favorite.model";
+import { UserGameVisit } from "./userGameVisit.model";
 
 // Relationships
 Game.belongsTo(User, { foreignKey: "created_by" });

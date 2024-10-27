@@ -32,4 +32,4 @@ Genre.init(
   }
 );
 
-export default Genre;
+export { Genre, GenreAttributes };

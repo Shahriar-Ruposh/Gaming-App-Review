@@ -3,7 +3,7 @@ import cors from "cors";
 const { syncDb } = require("./models");
 import cookieParser from "cookie-parser";
 import dotenv from "dotenv";
-import authRoutes from "./routes/auth";
+import authRoutes from "./routes/auth.route";
 
 dotenv.config();
 

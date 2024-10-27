@@ -52,4 +52,4 @@ UserGameVisit.init(
   }
 );
 
-export default UserGameVisit;
+export { UserGameVisit, UserGameVisitAttributes };
