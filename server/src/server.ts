@@ -6,7 +6,6 @@ import dotenv from "dotenv";
 import authRoutes from "./routes/auth.route";
 import gameRoutes from "./routes/game.route";
 import genreRoutes from "./routes/genre.route";
-import homeRoutes from "./routes/gamePage.route";
 
 dotenv.config();
 
@@ -33,7 +32,6 @@ app.use(cookieParser());
 app.use("/api/auth", authRoutes);
 app.use("/api/games", gameRoutes);
 app.use("/api/genres", genreRoutes);
-app.use("/api/home", homeRoutes);
 
 syncDb().then(() => {
   const PORT = process.env.PORT || 8000;
