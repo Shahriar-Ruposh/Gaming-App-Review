@@ -1,27 +1,25 @@
 import { DataTypes, Model, Optional } from "sequelize";
 import sequelize from "../config/db";
 
-interface ReviewAttributes {
+interface CommentAttributes {
   id: string;
   game_id: string;
   user_id: string;
-  rating: number;
-  comment?: string;
+  comment: number;
   created_at: Date;
 }
 
-interface ReviewCreationAttributes extends Optional<ReviewAttributes, "id" | "comment"> {}
+interface CommentCreationAttributes extends Optional<CommentAttributes, "id"> {}
 
-class Review extends Model<ReviewAttributes, ReviewCreationAttributes> implements ReviewAttributes {
+class Comment extends Model<CommentAttributes, CommentCreationAttributes> implements CommentAttributes {
   public id!: string;
   public game_id!: string;
   public user_id!: string;
-  public rating!: number;
-  public comment?: string;
+  public comment!: number;
   public readonly created_at!: Date;
 }
 
-Review.init(
+Comment.init(
   {
     id: {
       type: DataTypes.UUID,
@@ -36,12 +34,9 @@ Review.init(
       type: DataTypes.UUID,
       allowNull: false,
     },
-    rating: {
+    comment: {
       type: DataTypes.INTEGER,
       allowNull: false,
-    },
-    comment: {
-      type: DataTypes.TEXT,
     },
     created_at: {
       type: DataTypes.DATE,
@@ -50,9 +45,9 @@ Review.init(
   },
   {
     sequelize,
-    modelName: "Review",
+    modelName: "Comment",
     timestamps: false,
   }
 );
 
-export { Review, ReviewAttributes };
+export { Comment, CommentAttributes };

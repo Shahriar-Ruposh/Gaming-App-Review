@@ -1,18 +1,13 @@
 import { Request, Response } from "express";
 import { Game, GameAttributes } from "../models/game.model";
 import { Genre, GameGenre } from "../models";
+import { Rating } from "../models/rating.model";
+import { Comment } from "../models/comment.model";
 import { User, UserAttributes } from "../models/user.model";
 import { validationResult } from "express-validator";
-import { Op } from "sequelize";
+import { Op, fn, col, literal } from "sequelize";
 
 export const getAllGames = async (req: Request, res: Response) => {
-  //   try {
-  //     const games = await Game.findAll();
-  //     res.json(games);
-  //   } catch (error) {
-  //     console.error(error);
-  //     res.status(500).json({ error: "Internal server error" });
-  //   }
   try {
     const { page = 1, limit = 50, search, genre, min_score, max_score } = req.query;
 
@@ -45,19 +40,54 @@ export const getAllGames = async (req: Request, res: Response) => {
       };
     }
 
-    const games = await Game.findAndCountAll({
+    const games = await Game.findAll({
       where,
       ...genreFilter,
       limit: Number(limit),
       offset,
-      include: [{ model: Genre, as: "Genres", through: { attributes: [] } }], // Corrected alias
+      include: [
+        { model: Genre, as: "Genres", through: { attributes: [] } },
+        {
+          model: Rating,
+          as: "Ratings",
+          attributes: [],
+        },
+        {
+          model: Comment,
+          as: "Comments",
+          attributes: [],
+        },
+      ],
+      attributes: {
+        include: [
+          [fn("AVG", col("Ratings.rating")), "avg_user_rating"],
+          [fn("COUNT", col("Comments.id")), "comment_count"],
+        ],
+      },
+      group: ["Game.id", "Genres.id"],
       order: [["popularity_score", "DESC"]],
+      subQuery: false,
     });
 
-    const totalPages = Math.ceil(games.count / Number(limit));
+    // Calculate total games count based on filters without limit & offset
+    const totalGamesCount = await Game.count({
+      where,
+      include: genre
+        ? [
+            {
+              model: Genre,
+              as: "Genres",
+              where: { id: genre },
+              through: { attributes: [] },
+            },
+          ]
+        : undefined,
+    });
+
+    const totalPages = Math.ceil(totalGamesCount / Number(limit));
 
     res.json({
-      games: games.rows,
+      games,
       currentPage: Number(page),
       totalPages,
     });
@@ -71,14 +101,24 @@ export const getGameById = async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
 
-    const game = await Game.findByPk(id, {
+    const game = await Game.findOne({
+      where: { id },
       include: [
         {
           model: Genre,
           as: "Genres",
           through: { attributes: [] },
         },
+        {
+          model: Rating,
+          as: "Ratings",
+          attributes: [],
+        },
       ],
+      attributes: {
+        include: [[fn("AVG", col("Ratings.rating")), "avg_user_rating"]],
+      },
+      group: ["Game.id", "Genres.id"],
     });
 
     if (!game) {
@@ -147,3 +187,56 @@ export const deleteGame = async (req: Request, res: Response) => {
     res.status(500).json({ error: "Internal server error" });
   }
 };
+
+// try {
+//   const { page = 1, limit = 5, search, genre, min_score, max_score } = req.query;
+
+//   const offset = (Number(page) - 1) * Number(limit);
+//   const where: any = {};
+
+//   if (search) {
+//     where.title = { [Op.iLike]: `%${search}%` };
+//   }
+
+//   if (min_score && max_score) {
+//     where.avg_user_score = { [Op.between]: [Number(min_score), Number(max_score)] };
+//   } else if (min_score) {
+//     where.avg_user_score = { [Op.gte]: Number(min_score) };
+//   } else if (max_score) {
+//     where.avg_user_score = { [Op.lte]: Number(max_score) };
+//   }
+
+//   let genreFilter = {};
+//   if (genre) {
+//     genreFilter = {
+//       include: [
+//         {
+//           model: Genre,
+//           as: "Genres",
+//           where: { id: genre },
+//           through: { attributes: [] },
+//         },
+//       ],
+//     };
+//   }
+
+//   const games = await Game.findAndCountAll({
+//     where,
+//     ...genreFilter,
+//     limit: Number(limit),
+//     offset,
+//     include: [{ model: Genre, as: "Genres", through: { attributes: [] } }],
+//     order: [["popularity_score", "DESC"]],
+//   });
+
+//   const totalPages = Math.ceil(games.count / Number(limit));
+
+//   res.json({
+//     games: games.rows,
+//     currentPage: Number(page),
+//     totalPages,
+//   });
+// } catch (error) {
+//   console.error(error);
+//   res.status(500).json({ message: "Server error", error });
+// }

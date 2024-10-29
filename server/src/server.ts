@@ -6,6 +6,8 @@ import dotenv from "dotenv";
 import authRoutes from "./routes/auth.route";
 import gameRoutes from "./routes/game.route";
 import genreRoutes from "./routes/genre.route";
+import ratingRoutes from "./routes/rating.route";
+import commentRoutes from "./routes/comment.route";
 
 dotenv.config();
 
@@ -32,6 +34,8 @@ app.use(cookieParser());
 app.use("/api/auth", authRoutes);
 app.use("/api/games", gameRoutes);
 app.use("/api/genres", genreRoutes);
+app.use("/api", ratingRoutes);
+app.use("/api", commentRoutes);
 
 syncDb().then(() => {
   const PORT = process.env.PORT || 8000;
