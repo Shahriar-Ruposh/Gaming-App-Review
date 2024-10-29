@@ -5,7 +5,7 @@ interface CommentAttributes {
   id: string;
   game_id: string;
   user_id: string;
-  comment: number;
+  comment: string;
   created_at: Date;
 }
 
@@ -15,7 +15,7 @@ class Comment extends Model<CommentAttributes, CommentCreationAttributes> implem
   public id!: string;
   public game_id!: string;
   public user_id!: string;
-  public comment!: number;
+  public comment!: string;
   public readonly created_at!: Date;
 }
 
@@ -35,7 +35,7 @@ Comment.init(
       allowNull: false,
     },
     comment: {
-      type: DataTypes.INTEGER,
+      type: DataTypes.STRING,
       allowNull: false,
     },
     created_at: {

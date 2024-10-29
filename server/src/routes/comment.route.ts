@@ -4,10 +4,10 @@ import { getCommentsByGameId, createComment, deleteComment } from "../controller
 
 const router = Router();
 
-router.get("/games/:gameId/reviews", authenticate, getCommentsByGameId);
+router.get("/games/:gameId/comments", authenticate, getCommentsByGameId);
 
-router.post("/games/:gameId/reviews", authenticate, createComment);
+router.post("/games/:gameId/comments", authenticate, createComment);
 
-router.delete("/reviews/:reviewId", authenticate, deleteComment);
+router.delete("/comments/:commentId", authenticate, deleteComment);
 
 export default router;

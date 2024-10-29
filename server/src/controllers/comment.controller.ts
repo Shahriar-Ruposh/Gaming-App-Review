@@ -28,6 +28,7 @@ export const createComment = async (req: Request, res: Response) => {
   const { comment } = req.body;
   const userId = req.user?.userId.toString();
   try {
+    console.log(",,,,,,,,,,,,,,,>>>>>>>>>>>>>", gameId, userId, comment);
     const game = await Game.findByPk(gameId);
     if (!game) {
       return res.status(404).json({ message: "Game not found" });
