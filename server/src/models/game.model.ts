@@ -1,7 +1,5 @@
 import { DataTypes, Model, Optional } from "sequelize";
 import sequelize from "../config/db";
-
-// Define the attributes
 interface GameAttributes {
   id: string;
   title: string;
@@ -9,13 +7,11 @@ interface GameAttributes {
   release_date?: Date;
   publisher?: string;
   thumbnail?: string;
-  avg_user_score: number;
   popularity_score: number;
   trending_score: number;
   created_by: string;
 }
 
-// Define optional attributes for game creation
 interface GameCreationAttributes extends Optional<GameAttributes, "id" | "description" | "release_date" | "publisher" | "thumbnail"> {}
 
 class Game extends Model<GameAttributes, GameCreationAttributes> implements GameAttributes {
@@ -25,7 +21,6 @@ class Game extends Model<GameAttributes, GameCreationAttributes> implements Game
   public release_date?: Date;
   public publisher?: string;
   public thumbnail?: string;
-  public avg_user_score!: number;
   public popularity_score!: number;
   public trending_score!: number;
   public created_by!: string;
@@ -59,10 +54,7 @@ Game.init(
     thumbnail: {
       type: DataTypes.STRING,
     },
-    avg_user_score: {
-      type: DataTypes.DECIMAL,
-      defaultValue: 0,
-    },
+
     popularity_score: {
       type: DataTypes.INTEGER,
       defaultValue: 0,

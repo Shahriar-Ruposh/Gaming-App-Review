@@ -24,13 +24,19 @@ export const register = async (req: Request, res: Response) => {
       name,
       email,
       password,
-      otp,
-      otpExpiry,
+      // otp,
+      // otpExpiry,
+      isVerified: true,
+      isActive: true,
     } as UserAttributes);
+    const token = jwt.sign({ userId: user.id, email: user.email, roles: [user.isAdmin, user.isSuperAdmin] }, JWT_SECRET, { expiresIn: "20d" });
+    // await sendEmail(email, "Email Verification", `Your OTP is: ${otp}`);
+    res.cookie("token", token, {
+      httpOnly: true,
+      // secure: process.env.NODE_ENV === "production",
+    });
 
-    await sendEmail(email, "Email Verification", `Your OTP is: ${otp}`);
-
-    res.status(201).json({ message: "Registration successful. Please verify your email." });
+    res.status(201).json({ message: "Registration successful. Please verify your email.", token, user: { userId: user.id, email: user.email, name: user.name } });
   } catch (error) {
     res.status(500).json({ message: "Server error", error });
   }
@@ -74,14 +80,14 @@ export const login = async (req: Request, res: Response) => {
       return res.status(401).json({ message: "Please verify your email first" });
     }
 
-    const token = jwt.sign({ userId: user.id, email: user.email, roles: [user.isAdmin, user.isSuperAdmin] }, JWT_SECRET, { expiresIn: "24h" });
+    const token = jwt.sign({ userId: user.id, email: user.email, roles: [user.isAdmin, user.isSuperAdmin] }, JWT_SECRET, { expiresIn: "20d" });
 
     res.cookie("token", token, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
+      // secure: process.env.NODE_ENV === "production",
     });
 
-    res.json({ message: "Login successful", token });
+    res.json({ message: "Login successful", token, user: { userId: user.id, email: user.email, name: user.name } });
   } catch (error) {
     res.status(500).json({ message: "Server error", error });
   }
@@ -111,14 +117,14 @@ export const googleLogin = async (req: Request, res: Response) => {
       } as UserAttributes);
     }
 
-    const jwtToken = jwt.sign({ userId: user.id, email: user.email, roles: [user.isAdmin, user.isSuperAdmin] }, JWT_SECRET, { expiresIn: "24h" });
+    const jwtToken = jwt.sign({ userId: user.id, email: user.email, name: user.name, roles: [user.isAdmin, user.isSuperAdmin] }, JWT_SECRET, { expiresIn: "24h" });
 
     res.cookie("token", jwtToken, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
+      // secure: process.env.NODE_ENV === "production",
     });
 
-    res.json({ message: "Google login successful", token: jwtToken });
+    res.json({ message: "Google login successful", token: jwtToken, user: { userId: user.id, email: user.email, name: user.name } });
   } catch (error) {
     res.status(500).json({ message: "Server error", error });
   }
@@ -173,6 +179,7 @@ export const resetPassword = async (req: Request, res: Response) => {
 };
 
 export const logout = (req: Request, res: Response) => {
-  res.clearCookie("token");
+  const token = req.cookies.token || req.headers.authorization?.split(" ")[1];
+  res.clearCookie(token);
   res.json({ message: "Logout successful" });
 };
