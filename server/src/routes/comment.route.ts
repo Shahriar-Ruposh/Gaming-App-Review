@@ -4,7 +4,7 @@ import { getCommentsByGameId, createComment, deleteComment } from "../controller
 
 const router = Router();
 
-router.get("/games/:gameId/comments", authenticate, getCommentsByGameId);
+router.get("/games/:gameId/comments", getCommentsByGameId);
 
 router.post("/games/:gameId/comments", authenticate, createComment);
 

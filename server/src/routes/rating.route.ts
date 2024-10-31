@@ -4,7 +4,7 @@ import { getRatingsByGameId, createRating, deleteRating } from "../controllers/r
 
 const router = Router();
 
-router.get("/games/:gameId/ratings", authenticate, getRatingsByGameId);
+router.get("/games/:gameId/ratings", getRatingsByGameId);
 
 router.post("/games/:gameId/ratings", authenticate, createRating);
 

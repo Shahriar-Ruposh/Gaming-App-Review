@@ -132,6 +132,39 @@ export const getGameById = async (req: Request, res: Response) => {
   }
 };
 
+export const getMyGames = async (req: Request, res: Response) => {
+  try {
+    const userId = req.user?.userId.toString();
+
+    const games = await Game.findAll({
+      where: { created_by: userId },
+      include: [{ model: Genre, as: "Genres", through: { attributes: [] } }],
+    });
+    res.json(games);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+};
+
+export const getMyGameById = async (req: Request, res: Response) => {
+  try {
+    const userId = req.user?.userId.toString();
+    const { id } = req.params;
+    const games = await Game.findAll({
+      where: { id, created_by: userId },
+      include: [{ model: Genre, as: "Genres", through: { attributes: [] } }],
+    });
+    if (!games) {
+      return res.status(404).json({ error: "Game not found" });
+    }
+    res.json(games);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+};
+
 export const createGame = async (req: Request, res: Response) => {
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
