@@ -2,6 +2,7 @@ import { Request, Response } from "express";
 import { Rating } from "../models/rating.model";
 import { Game } from "../models/game.model";
 import { User } from "../models/user.model";
+import { r } from "@faker-js/faker/dist/airline-WjISwexU";
 
 export const getRatingsByGameId = async (req: Request, res: Response) => {
   try {
@@ -24,6 +25,7 @@ export const createRating = async (req: Request, res: Response) => {
     const { gameId } = req.params;
     let { rating } = req.body;
     const userId = req.user?.userId?.toString();
+    console.log(">>>>>>>>>>>>>>>>>>>>>>>>>>>", gameId, userId, rating), ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>.";
     if (!userId || !gameId) {
       return res.status(401).json({ message: "Unauthorized" });
     }

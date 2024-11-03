@@ -72,20 +72,24 @@ export const login = async (req: Request, res: Response) => {
     const { email, password } = req.body;
 
     const user = await User.findOne({ where: { email } });
+    // console.log(">>>>>>>>>>>>>>>>>>>>", user);
+    console.log("1");
     if (!user || !(await user.comparePassword(password))) {
       return res.status(401).json({ message: "Invalid credentials" });
     }
+    console.log("2");
 
     if (!user.isVerified) {
       return res.status(401).json({ message: "Please verify your email first" });
     }
-
+    console.log("3");
     const token = jwt.sign({ userId: user.id, email: user.email, roles: [user.isAdmin, user.isSuperAdmin] }, JWT_SECRET, { expiresIn: "20d" });
-
+    console.log("4");
     res.cookie("token", token, {
       httpOnly: true,
       // secure: process.env.NODE_ENV === "production",
     });
+    console.log("5");
 
     res.json({ message: "Login successful", token, user: { userId: user.id, email: user.email, name: user.name } });
   } catch (error) {

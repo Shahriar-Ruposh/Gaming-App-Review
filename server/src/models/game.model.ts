@@ -6,6 +6,8 @@ interface GameAttributes {
   description?: string;
   release_date?: Date;
   publisher?: string;
+  is_published?: boolean;
+  view_count?: number;
   thumbnail?: string;
   popularity_score: number;
   trending_score: number;
@@ -20,6 +22,8 @@ class Game extends Model<GameAttributes, GameCreationAttributes> implements Game
   public description?: string;
   public release_date?: Date;
   public publisher?: string;
+  public is_published?: boolean;
+  public view_count?: number;
   public thumbnail?: string;
   public popularity_score!: number;
   public trending_score!: number;
@@ -53,6 +57,15 @@ Game.init(
     },
     thumbnail: {
       type: DataTypes.STRING,
+    },
+    is_published: {
+      type: DataTypes.BOOLEAN,
+      defaultValue: true,
+    },
+
+    view_count: {
+      type: DataTypes.INTEGER,
+      defaultValue: 0,
     },
 
     popularity_score: {
