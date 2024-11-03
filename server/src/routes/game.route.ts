@@ -1,13 +1,13 @@
 import { Router } from "express";
 import { authenticate } from "../middleware/auth.middleware";
 import { createGameValidator, updateGameValidator } from "../validators/game.validators";
-import { getAllGames, getGameById, getMyGames, getMyGameById, createGame, updateGame, deleteGame, createOneMillionData } from "../controllers/game.controller";
+import { getAllGames, getGameById, getMyGames, getMyGameById, createGame, updateGame, deleteGame, elsearch } from "../controllers/game.controller";
 
 const router = Router();
 
-router.get("/oneMillionDataInput", createOneMillionData);
 router.get("/my-games", authenticate, getMyGames);
 router.get("/my-games/:id", authenticate, getMyGameById);
+router.get("/elsearch", elsearch);
 
 router.get("/", getAllGames);
 router.get("/:id", getGameById);
