@@ -266,19 +266,7 @@ export const createGame = async (req: Request, res: Response) => {
     await client.index({
       index: "games",
       id: game.id,
-      body: {
-        id: game.id,
-        title: game.title,
-        description: game.description,
-        release_date: game.release_date,
-        publisher: game.publisher,
-        thumbnail: game.thumbnail,
-        is_published: game.is_published,
-        view_count: game.view_count,
-        popularity_score: game.popularity_score,
-        trending_score: game.trending_score,
-        created_by: game.created_by,
-      },
+      body: game.toJSON(),
     });
 
     res.status(201).json(game);
@@ -328,24 +316,24 @@ export const deleteGame = async (req: Request, res: Response) => {
   }
 };
 
-export const elsearch = async (req: Request, res: Response) => {
-  const query = "awesome";
-  try {
-    const response = await client.search({
-      index: "games",
-      body: {
-        query: {
-          match: { title: query }, // search by title
-        },
-      },
-    });
-    console.log(response);
-    res.json(response.hits.hits.map((hit) => hit._source));
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ error: error.message });
-  }
-};
+// export const elsearch = async (req: Request, res: Response) => {
+//   const query = "Recycled Fresh Mouse";
+//   try {
+//     const response = await client.search({
+//       index: "games",
+//       body: {
+//         query: {
+//           match: { title: query }, // search by title
+//         },
+//       },
+//     });
+//     console.log("response>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>", response);
+//     res.json(response.hits.hits.map((hit) => hit._source));
+//   } catch (error) {
+//     console.error(error);
+//     res.status(500).json({ error: error.message });
+//   }
+// };
 
 // const generateRandomData = async () => {
 //   const userIds = [

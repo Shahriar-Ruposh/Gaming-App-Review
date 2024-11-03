@@ -8,6 +8,7 @@ import gameRoutes from "./routes/game.route";
 import genreRoutes from "./routes/genre.route";
 import ratingRoutes from "./routes/rating.route";
 import commentRoutes from "./routes/comment.route";
+import { createGameIndex } from "./elasticsearchSetup";
 // import oneMillionDataRoute from "./routes/oneMillion.route";
 
 dotenv.config();
@@ -41,7 +42,8 @@ app.use("/api", commentRoutes);
 
 syncDb().then(() => {
   const PORT = process.env.PORT || 8000;
-  app.listen(PORT, () => {
+  app.listen(PORT, async () => {
     console.log(`Server running on port http://localhost:${PORT}`);
+    await createGameIndex();
   });
 });
