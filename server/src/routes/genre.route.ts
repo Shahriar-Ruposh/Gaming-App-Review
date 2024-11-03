@@ -6,7 +6,7 @@ const router = Router();
 
 router.get("/", getAllGenres);
 
-router.post("/", authenticate, createGenre);
+router.post("/", createGenre);
 
 router.put("/:id", authenticate, updateGenre);
 

@@ -8,6 +8,7 @@ import gameRoutes from "./routes/game.route";
 import genreRoutes from "./routes/genre.route";
 import ratingRoutes from "./routes/rating.route";
 import commentRoutes from "./routes/comment.route";
+// import oneMillionDataRoute from "./routes/oneMillion.route";
 
 dotenv.config();
 
@@ -31,6 +32,7 @@ app.use(
 app.use(express.json());
 app.use(cookieParser());
 
+// app.use("/api/oneMillionDataInput", oneMillionDataRoute);
 app.use("/api/auth", authRoutes);
 app.use("/api/games", gameRoutes);
 app.use("/api/genres", genreRoutes);
