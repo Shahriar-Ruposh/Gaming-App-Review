@@ -8,19 +8,31 @@ import gameRoutes from "./routes/game.route";
 import genreRoutes from "./routes/genre.route";
 import ratingRoutes from "./routes/rating.route";
 import commentRoutes from "./routes/comment.route";
-import { createGameIndex } from "./elasticsearchSetup";
+import session from "express-session";
+// import { createGameIndex } from "./elasticsearchSetup";
 // import oneMillionDataRoute from "./routes/oneMillion.route";
 
 dotenv.config();
 
 const app = express();
 
+// Set up Redis session store (optional, but recommended for production)
+// const RedisStore = connectRedis(session);
+// const redisClient = new Redis();
+
 // app.use(
-//   cors({
-//     // origin: process.env.CORS_ORIGIN || "http://localhost:3000",
-//     credentials: true,
+//   session({
+//     secret: "your-secret-key",
+//     resave: false,
+//     saveUninitialized: false,
+//     cookie: {
+//       secure: false,
+//       httpOnly: true,
+//       maxAge: null,
+//     },
 //   })
 // );
+
 app.use(
   cors({
     origin: (origin, callback) => {
@@ -44,6 +56,6 @@ syncDb().then(() => {
   const PORT = process.env.PORT || 8000;
   app.listen(PORT, async () => {
     console.log(`Server running on port http://localhost:${PORT}`);
-    await createGameIndex();
+    // await createGameIndex();
   });
 });

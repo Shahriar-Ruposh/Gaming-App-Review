@@ -6,7 +6,7 @@ import { GameGenre } from "./gameGenres.model";
 import { Rating } from "./rating.model";
 import { Comment } from "./comment.model";
 import { Favorite } from "./favorite.model";
-import { UserGameVisit } from "./userGameVisit.model";
+import { UserGameVisits } from "./userGameVisit.model";
 
 // Define relationships
 Game.belongsTo(User, { foreignKey: "created_by" });
@@ -16,8 +16,8 @@ Comment.belongsTo(User, { foreignKey: "user_id" });
 Comment.belongsTo(Game, { foreignKey: "game_id" });
 Favorite.belongsTo(User, { foreignKey: "user_id" });
 Favorite.belongsTo(Game, { foreignKey: "game_id" });
-UserGameVisit.belongsTo(User, { foreignKey: "user_id" });
-UserGameVisit.belongsTo(Game, { foreignKey: "game_id" });
+UserGameVisits.belongsTo(User, { foreignKey: "user_id" });
+UserGameVisits.belongsTo(Game, { foreignKey: "game_id" });
 
 // Many-to-Many: Game and Genre through GameGenre
 Game.belongsToMany(Genre, { through: GameGenre, foreignKey: "game_id" });
@@ -36,4 +36,4 @@ const syncDb = async () => {
   }
 };
 
-export { User, Game, Genre, GameGenre, Rating, Comment, Favorite, UserGameVisit, syncDb };
+export { User, Game, Genre, GameGenre, Rating, Comment, Favorite, UserGameVisits, syncDb };

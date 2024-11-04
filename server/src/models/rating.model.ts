@@ -1,5 +1,6 @@
 import { DataTypes, Model, Optional } from "sequelize";
 import sequelize from "../config/db";
+import { Game } from "./game.model";
 
 interface RatingAttributes {
   id: string;
@@ -29,6 +30,11 @@ Rating.init(
     game_id: {
       type: DataTypes.UUID,
       allowNull: false,
+      references: {
+        model: Game,
+        key: "id",
+      },
+      onDelete: "CASCADE",
     },
     user_id: {
       type: DataTypes.UUID,

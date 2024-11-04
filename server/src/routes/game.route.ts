@@ -1,5 +1,6 @@
 import { Router } from "express";
 import { authenticate } from "../middleware/auth.middleware";
+import { trackUser } from "../middleware/trackUser.middleware";
 import { createGameValidator, updateGameValidator } from "../validators/game.validators";
 import { getAllGames, getGameById, getMyGames, getMyGameById, createGame, updateGame, deleteGame } from "../controllers/game.controller";
 
@@ -10,7 +11,7 @@ router.get("/my-games/:id", authenticate, getMyGameById);
 // router.get("/elsearch", elsearch);
 
 router.get("/", getAllGames);
-router.get("/:id", getGameById);
+router.get("/:id", trackUser, getGameById);
 
 // router.post("/", createGameValidator, createGame);
 router.post("/", createGame);

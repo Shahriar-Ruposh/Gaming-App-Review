@@ -1,6 +1,6 @@
 import { Request, Response } from "express";
 import { Game, GameAttributes } from "../models/game.model";
-import { Genre, GameGenre } from "../models";
+import { Genre, GameGenre, UserGameVisits } from "../models";
 import { Rating } from "../models/rating.model";
 import { Comment } from "../models/comment.model";
 import { User, UserAttributes } from "../models/user.model";
@@ -8,11 +8,20 @@ import { validationResult } from "express-validator";
 import { Op, fn, col, literal } from "sequelize";
 import { faker } from "@faker-js/faker";
 import { v4 as uuidv4 } from "uuid";
-import client from "../config/elasticSearch";
+import cookie from "cookie";
+import session from "express-session";
+// import client from "../config/elasticSearch";
+
+declare module "express-session" {
+  interface Session {
+    anonId?: string;
+  }
+}
 
 export const getAllGames = async (req: Request, res: Response) => {
   try {
     const { page, limit, search, min_score, max_score } = req.query;
+    console.log(limit);
     let { genre } = req.query;
 
     const offset = (Number(page) - 1) * Number(limit);
@@ -102,6 +111,44 @@ export const getAllGames = async (req: Request, res: Response) => {
 export const getGameById = async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
+    const userId = req.user?.userId?.toString() || null;
+
+    console.log(">>>>>>>>>>>>>>>>>>>>Cookies:", req.cookies);
+
+    let anonId = req.cookies.anonId;
+    if (!userId && !anonId) {
+      anonId = uuidv4();
+      res.cookie("anonId", anonId, {
+        httpOnly: true,
+        maxAge: 30 * 24 * 60 * 60 * 1000,
+      });
+    }
+    console.log(">>>>>>>>>>>>>>>>>>>Setting cookie:", anonId);
+
+    console.log(">>>>>>>>>>>>>>>>User ID:", userId);
+    console.log(">>>>>>>>>>>>>>>>>Anonymous ID (cookie):", anonId);
+
+    const visitCondition = {
+      game_id: id,
+      ...(userId ? { user_id: userId } : { anon_id: anonId }),
+    };
+
+    const existingVisit = await UserGameVisits.findOne({
+      where: visitCondition,
+    });
+
+    console.log("Existing Visit:", existingVisit ? "Found" : "Not Found");
+
+    if (!existingVisit) {
+      await UserGameVisits.create({
+        game_id: id,
+        user_id: userId,
+        anon_id: anonId,
+      });
+
+      await Game.increment("view_count", { where: { id } });
+      console.log("View count incremented for game:", id);
+    }
 
     const game = await Game.findOne({
       where: { id },
@@ -136,7 +183,7 @@ export const getGameById = async (req: Request, res: Response) => {
 
 export const getMyGames = async (req: Request, res: Response) => {
   try {
-    const { page = 1, limit = 50, search, min_score, max_score } = req.query;
+    const { page, limit, search, min_score, max_score } = req.query;
     let { genre } = req.query;
     let userId = req.user?.userId.toString();
 
@@ -255,19 +302,23 @@ export const createGame = async (req: Request, res: Response) => {
     if (!genres || genres.length === 0) {
       return res.status(400).json({ error: "At least one genre is required" });
     }
+    console.log("this is hit 2");
     const newReleaseDate = new Date(release_date);
     release_date = newReleaseDate.toISOString();
     const created_by = userId;
+    console.log("this is hit 3");
+    console.log("title:>>>>", title, "description:>>>>", description, "release_date:>>>>", release_date, "publisher:>>>>", publisher, "thumbnail:>>>>", thumbnail, "created_by:>>>>", created_by, "genres:>>>>", genres);
     const game = await Game.create({ title, description, release_date, publisher, thumbnail, created_by } as GameAttributes);
+    console.log("this is hit 4");
 
     for (let i = 0; i < genres.length; i++) {
       const gameGenre = await GameGenre.create({ game_id: game.id, genre_id: genres[i] });
     }
-    await client.index({
-      index: "games",
-      id: game.id,
-      body: game.toJSON(),
-    });
+    // await client.index({
+    //   index: "games",
+    //   id: game.id,
+    //   body: game.toJSON(),
+    // });
 
     res.status(201).json(game);
   } catch (error) {
@@ -312,9 +363,44 @@ export const deleteGame = async (req: Request, res: Response) => {
     res.json({ message: "Game deleted successfully" });
   } catch (error) {
     console.error(error);
-    res.status(500).json({ error: "Internal server error" });
+    res.status(500).json({ error: "Internal server error", message: error.message });
   }
 };
+
+// export const getGameById = async (req: Request, res: Response) => {
+//   try {
+//     const { id } = req.params;
+
+//     const game = await Game.findOne({
+//       where: { id },
+//       include: [
+//         {
+//           model: Genre,
+//           as: "Genres",
+//           through: { attributes: [] },
+//         },
+//         {
+//           model: Rating,
+//           as: "Ratings",
+//           attributes: [],
+//         },
+//       ],
+//       attributes: {
+//         include: [[fn("AVG", col("Ratings.rating")), "avg_user_rating"]],
+//       },
+//       group: ["Game.id", "Genres.id"],
+//     });
+
+//     if (!game) {
+//       return res.status(404).json({ error: "Game not found" });
+//     }
+
+//     res.json(game);
+//   } catch (error) {
+//     console.error(error);
+//     res.status(500).json({ error: "Internal server error" });
+//   }
+// };
 
 // export const elsearch = async (req: Request, res: Response) => {
 //   const query = "Recycled Fresh Mouse";
