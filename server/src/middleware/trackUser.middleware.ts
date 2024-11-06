@@ -18,11 +18,11 @@ declare global {
 
 export const trackUser = (req: Request, res: Response, next: NextFunction) => {
   const token = req.cookies.token || req.headers.authorization?.split(" ")[1];
-  console.log("?????????????????????//", token);
-  if (!token) {
+  //   console.log("?????????????????????//", typeof token);
+  if (token === "null" || !token || token === "undefined" || token === null || token === undefined) {
+    console.log("passed");
     return next();
   }
-
   try {
     const decoded = jwt.verify(token, JWT_SECRET) as JwtPayload;
     req.user = decoded;

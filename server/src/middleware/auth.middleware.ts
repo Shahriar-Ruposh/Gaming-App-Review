@@ -20,12 +20,13 @@ declare global {
 const authenticate = (req: Request, res: Response, next: NextFunction) => {
   try {
     const token = req.cookies.token || req.headers.authorization?.split(" ")[1];
+
     if (!token) {
       return res.status(401).json({ message: "Authentication required" });
     }
 
     const decoded = jwt.verify(token, JWT_SECRET) as JwtPayload;
-
+    console.log("??????????????????????????????????????", decoded);
     req.user = decoded;
     next();
   } catch (error) {

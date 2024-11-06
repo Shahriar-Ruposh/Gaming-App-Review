@@ -33,14 +33,17 @@ UserGameVisits.init(
     user_id: {
       type: DataTypes.UUID,
       allowNull: true,
+      onDelete: "CASCADE",
     },
     game_id: {
       type: DataTypes.UUID,
       allowNull: false,
+      onDelete: "CASCADE",
     },
     anon_id: {
       type: DataTypes.STRING,
       allowNull: true,
+      onDelete: "CASCADE",
     },
     visited_at: {
       type: DataTypes.DATE,

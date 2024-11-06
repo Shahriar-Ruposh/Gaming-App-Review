@@ -1,27 +1,33 @@
 import client from "./config/elasticSearch";
 
-export const createGameIndex = async () => {
-  const indexExists = await client.indices.exists({ index: "games" });
-  if (!indexExists) {
+const createGameIndex = async () => {
+  const index = "games";
+  const exists = await client.indices.exists({ index });
+
+  if (!exists) {
     await client.indices.create({
-      index: "games",
+      index,
       body: {
         mappings: {
           properties: {
-            id: { type: "keyword" },
             title: { type: "text" },
             description: { type: "text" },
             release_date: { type: "date" },
-            publisher: { type: "text" },
+            publisher: { type: "keyword" },
             thumbnail: { type: "text" },
-            is_published: { type: "boolean" },
+            genres: { type: "keyword" }, // Stores genre names as keywords
+            created_by: { type: "keyword" },
             view_count: { type: "integer" },
             popularity_score: { type: "integer" },
             trending_score: { type: "integer" },
-            created_by: { type: "keyword" },
           },
         },
       },
     });
+    console.log(`Index "${index}" created.`);
+  } else {
+    console.log(`Index "${index}" already exists.`);
   }
 };
+
+export default createGameIndex;

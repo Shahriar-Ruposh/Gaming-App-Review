@@ -33,6 +33,21 @@ export const createComment = async (req: Request, res: Response) => {
     if (!game) {
       return res.status(404).json({ message: "Game not found" });
     }
+    if (!comment) {
+      return res.status(400).json({ message: "Comment is required" });
+    }
+    const userComment = await Comment.findOne({
+      where: {
+        user_id: userId,
+      },
+    });
+    if (userComment) {
+      if (userComment.game_id === gameId) {
+        userComment.comment = comment;
+        await userComment.save();
+        return res.status(200).json({ message: "Comment updated successfully" });
+      }
+    }
     const newComment = await Comment.create({
       game_id: gameId,
       user_id: userId,

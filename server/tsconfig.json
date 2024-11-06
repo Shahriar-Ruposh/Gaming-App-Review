@@ -22,6 +22,7 @@
     "experimentalDecorators": true,
     "resolveJsonModule": true,
     "baseUrl": ".",
+    "types": ["node", "express"],
     "strict": false // Disables all strict type-checking options
   },
   "exclude": ["node_modules"],

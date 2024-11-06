@@ -10,6 +10,7 @@ import { faker } from "@faker-js/faker";
 import { v4 as uuidv4 } from "uuid";
 import cookie from "cookie";
 import session from "express-session";
+import client from "../config/elasticSearch";
 // import client from "../config/elasticSearch";
 
 declare module "express-session" {
@@ -25,6 +26,7 @@ export const getAllGames = async (req: Request, res: Response) => {
     let { genre } = req.query;
 
     const offset = (Number(page) - 1) * Number(limit);
+    console.log("????????????????????????????????????", offset);
     const where: any = {};
 
     if (search) {
@@ -290,35 +292,93 @@ export const getMyGameById = async (req: Request, res: Response) => {
 };
 
 export const createGame = async (req: Request, res: Response) => {
-  // console.log("this is hit");
-  // const errors = validationResult(req);
-  // if (!errors.isEmpty()) {
-  //   return res.status(400).json({ errors: errors.array() });
-  // }
-  console.log("this is hit");
   try {
-    // const userId = req.user?.userId.toString();
-    let { title, description, release_date, publisher, thumbnail, genres, userId } = req.body;
+    let { title, description, release_date, publisher, genres } = req.body;
+    const userId = req.user?.userId.toString();
+
     if (!genres || genres.length === 0) {
       return res.status(400).json({ error: "At least one genre is required" });
     }
+
+    // If genres is a string, parse it into an array
+    if (typeof genres === "string") {
+      genres = JSON.parse(genres);
+    }
+
+    const newReleaseDate = new Date(release_date);
+    release_date = newReleaseDate.toISOString();
+
+    // Handle thumbnail
+    //@ts-ignore
+    const thumbnailPath = req.file ? `/uploads/${req.file.filename}` : null;
+    console.log(">>>>>>>>>>>>>>>>>>>>>>>", thumbnailPath);
+
+    const game = await Game.create({
+      title,
+      description,
+      release_date,
+      publisher,
+      thumbnail: thumbnailPath,
+      created_by: userId,
+    });
+
+    for (const genreId of genres) {
+      await GameGenre.create({ game_id: game.id, genre_id: genreId });
+    }
+
+    res.status(201).json(game);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: error.message });
+  }
+};
+
+export const createGameCustom = async (req: Request, res: Response) => {
+  console.log("this is hit");
+  try {
+    let { title, description, release_date, publisher, thumbnail, genres, userId } = req.body;
+
+    if (!genres || genres.length === 0) {
+      return res.status(400).json({ error: "At least one genre is required" });
+    }
+
     console.log("this is hit 2");
     const newReleaseDate = new Date(release_date);
     release_date = newReleaseDate.toISOString();
     const created_by = userId;
     console.log("this is hit 3");
-    console.log("title:>>>>", title, "description:>>>>", description, "release_date:>>>>", release_date, "publisher:>>>>", publisher, "thumbnail:>>>>", thumbnail, "created_by:>>>>", created_by, "genres:>>>>", genres);
+
     const game = await Game.create({ title, description, release_date, publisher, thumbnail, created_by } as GameAttributes);
     console.log("this is hit 4");
 
     for (let i = 0; i < genres.length; i++) {
-      const gameGenre = await GameGenre.create({ game_id: game.id, genre_id: genres[i] });
+      await GameGenre.create({ game_id: game.id, genre_id: genres[i] });
     }
-    // await client.index({
-    //   index: "games",
-    //   id: game.id,
-    //   body: game.toJSON(),
-    // });
+
+    const genreRecords = await Genre.findAll({
+      where: { id: genres },
+      attributes: ["name"],
+    });
+    const genreNames = genreRecords.map((genre) => genre.name);
+
+    // Index the game in Elasticsearch with genre names
+    await client.index({
+      index: "games",
+      id: game.id,
+      body: {
+        title,
+        description,
+        release_date,
+        publisher,
+        thumbnail,
+        genres: genreNames, // Store genre names instead of IDs
+        created_by,
+        view_count: game.view_count,
+        popularity_score: game.popularity_score,
+        trending_score: game.trending_score,
+      },
+    });
+    console.log("Game indexed in Elasticsearch");
 
     res.status(201).json(game);
   } catch (error) {
@@ -367,6 +427,44 @@ export const deleteGame = async (req: Request, res: Response) => {
   }
 };
 
+// export const createGame = async (req: Request, res: Response) => {
+//   // console.log("this is hit");
+//   // const errors = validationResult(req);
+//   // if (!errors.isEmpty()) {
+//   //   return res.status(400).json({ errors: errors.array() });
+//   // }
+//   console.log("this is hit");
+//   try {
+//     // const userId = req.user?.userId.toString();
+//     let { title, description, release_date, publisher, thumbnail, genres, userId } = req.body;
+//     if (!genres || genres.length === 0) {
+//       return res.status(400).json({ error: "At least one genre is required" });
+//     }
+//     console.log("this is hit 2");
+//     const newReleaseDate = new Date(release_date);
+//     release_date = newReleaseDate.toISOString();
+//     const created_by = userId;
+//     console.log("this is hit 3");
+//     console.log("title:>>>>", title, "description:>>>>", description, "release_date:>>>>", release_date, "publisher:>>>>", publisher, "thumbnail:>>>>", thumbnail, "created_by:>>>>", created_by, "genres:>>>>", genres);
+//     const game = await Game.create({ title, description, release_date, publisher, thumbnail, created_by } as GameAttributes);
+//     console.log("this is hit 4");
+
+//     for (let i = 0; i < genres.length; i++) {
+//       const gameGenre = await GameGenre.create({ game_id: game.id, genre_id: genres[i] });
+//     }
+//     // await client.index({
+//     //   index: "games",
+//     //   id: game.id,
+//     //   body: game.toJSON(),
+//     // });
+
+//     res.status(201).json(game);
+//   } catch (error) {
+//     console.error(error);
+//     res.status(500).json({ error: error.message });
+//   }
+// };
+
 // export const getGameById = async (req: Request, res: Response) => {
 //   try {
 //     const { id } = req.params;
@@ -402,24 +500,34 @@ export const deleteGame = async (req: Request, res: Response) => {
 //   }
 // };
 
-// export const elsearch = async (req: Request, res: Response) => {
-//   const query = "Recycled Fresh Mouse";
-//   try {
-//     const response = await client.search({
-//       index: "games",
-//       body: {
-//         query: {
-//           match: { title: query }, // search by title
-//         },
-//       },
-//     });
-//     console.log("response>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>", response);
-//     res.json(response.hits.hits.map((hit) => hit._source));
-//   } catch (error) {
-//     console.error(error);
-//     res.status(500).json({ error: error.message });
-//   }
-// };
+export const elsearch = async (req: Request, res: Response) => {
+  const title = "Recycled Fresh Mouse";
+  if (!title) {
+    return res.status(400).json({ error: "Title query parameter is required" });
+  }
+
+  try {
+    const response = await client.search({
+      index: "games",
+      query: {
+        match: {
+          title: title,
+        },
+      },
+    });
+
+    res.status(200).json({
+      message: "Search results",
+      data: response.hits.hits,
+    });
+  } catch (error) {
+    console.error("Error performing search in Elasticsearch:", error);
+    res.status(500).json({
+      message: "Failed to search in Elasticsearch",
+      error: error.message,
+    });
+  }
+};
 
 // const generateRandomData = async () => {
 //   const userIds = [
@@ -547,3 +655,28 @@ export const deleteGame = async (req: Request, res: Response) => {
 //   console.error(error);
 //   res.status(500).json({ message: "Server error", error });
 // }
+
+// const games = await Game.findAll({
+//   attributes: {
+//     include: [
+//       [
+//         Sequelize.literal(`(SELECT AVG("rating") FROM "Ratings" WHERE "Ratings"."game_id" = "Game"."id")`),
+//         'avg_user_rating'
+//       ],
+//       [
+//         Sequelize.literal(`(SELECT COUNT("id") FROM "Comments" WHERE "Comments"."game_id" = "Game"."id")`),
+//         'comment_count'
+//       ]
+//     ]
+//   },
+//   include: [
+//     {
+//       model: Genre,
+//       attributes: ['id', 'name'],
+//       through: { attributes: [] }  // Skip the junction table attributes
+//     }
+//   ],
+//   order: [[Sequelize.literal('avg_user_rating'), 'ASC']],  // Ordering by avg_user_rating literal
+//   limit: 50,
+//   offset: 0
+// });
