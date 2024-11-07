@@ -3,6 +3,7 @@ import { Rating } from "../models/rating.model";
 import { Game } from "../models/game.model";
 import { User } from "../models/user.model";
 import { r } from "@faker-js/faker/dist/airline-WjISwexU";
+import client from "../config/elasticSearch";
 
 export const getRatingsByGameId = async (req: Request, res: Response) => {
   try {
@@ -38,6 +39,7 @@ export const createRating = async (req: Request, res: Response) => {
       if (userRating.game_id === gameId) {
         userRating.rating = rating;
         await userRating.save();
+
         return res.status(200).json({ message: "Rating updated successfully", rating: userRating.rating });
       }
     }
