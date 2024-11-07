@@ -21,87 +21,57 @@ declare module "express-session" {
 
 export const getAllGames = async (req: Request, res: Response) => {
   try {
-    const { page, limit, search, min_score, max_score } = req.query;
-    console.log(limit);
-    let { genre } = req.query;
+    const page = parseInt(req.query.page as string) - 1 || 0;
+    const limit = parseInt(req.query.limit as string) || 50;
+    const offset = page * limit;
+    const genre = req.query.genre ? (req.query.genre as string) : undefined;
+    const search = req.query.search ? (req.query.search as string) : "";
+    const min_score = req.query.min_score ? parseFloat(req.query.min_score as string) : undefined;
+    const max_score = req.query.max_score ? parseFloat(req.query.max_score as string) : undefined;
+    const sortByRating = req.query.sortByRating === "asc" || req.query.sortByRating === "desc" ? req.query.sortByRating : null;
 
-    const offset = (Number(page) - 1) * Number(limit);
-    console.log("????????????????????????????????????", offset);
-    const where: any = {};
-
-    if (search) {
-      where.title = { [Op.iLike]: `%${search}%` };
-    }
-
-    if (min_score && max_score) {
-      where.avg_user_score = { [Op.between]: [Number(min_score), Number(max_score)] };
-    } else if (min_score) {
-      where.avg_user_score = { [Op.gte]: Number(min_score) };
-    } else if (max_score) {
-      where.avg_user_score = { [Op.lte]: Number(max_score) };
-    }
-
-    if (genre && typeof genre === "string") {
-      genre.toString().toLowerCase();
-      if (genre === "all-games") {
-        genre = undefined;
-      }
-    }
-
-    const genreWhere = genre ? { name: { [Op.iLike]: `%${genre}%` } } : undefined;
-
-    const games = await Game.findAll({
-      where,
-      limit: Number(limit),
-      offset,
-      include: [
-        {
-          model: Genre,
-          as: "Genres",
-          through: { attributes: [] },
-          where: genreWhere,
+    const elasticQuery: any = {
+      index: "games",
+      from: offset,
+      size: limit,
+      body: {
+        query: {
+          bool: {
+            must: [search ? { match_phrase_prefix: { title: search } } : { match_all: {} }],
+            filter: [
+              ...(genre && genre !== "all-games" ? [{ term: { genres: genre } }] : []),
+              ...(min_score || max_score
+                ? [
+                    {
+                      range: { avg_user_score: { ...(min_score ? { gte: min_score } : {}), ...(max_score ? { lte: max_score } : {}) } },
+                    },
+                  ]
+                : []),
+            ],
+          },
         },
-        {
-          model: Rating,
-          as: "Ratings",
-          attributes: [],
-        },
-        {
-          model: Comment,
-          as: "Comments",
-          attributes: [],
-        },
-      ],
-      attributes: {
-        include: [
-          [fn("AVG", col("Ratings.rating")), "avg_user_rating"],
-          [fn("COUNT", col("Comments.id")), "comment_count"],
-        ],
+        sort: [{ release_date: { order: "desc" } }, ...(sortByRating ? [{ avg_user_score: { order: sortByRating } }] : [])],
       },
-      group: ["Game.id", "Genres.id"],
-      order: [["avg_user_rating", "ASC"]],
-      subQuery: false,
+    };
+
+    const { hits } = await client.search(elasticQuery);
+
+    const games = hits.hits.map((hit) => {
+      const { ...gameData } = hit._source as GameAttributes;
+      return {
+        ...gameData,
+        id: hit._id!,
+      };
     });
 
-    const totalGamesCount = await Game.count({
-      where,
-      include: genre
-        ? [
-            {
-              model: Genre,
-              as: "Genres",
-              where: genreWhere,
-              through: { attributes: [] },
-            },
-          ]
-        : undefined,
-    });
-
-    const totalPages = Math.ceil(totalGamesCount / Number(limit));
+    // console.log(">>>>>>>>>>>>>>>>>>>>>>>", hits.total);
+    //@ts-ignore
+    const totalGamesCount = hits.total.value;
+    const totalPages = Math.ceil(totalGamesCount / limit);
 
     res.json({
       games,
-      currentPage: Number(page),
+      currentPage: page + 1,
       totalPages,
     });
   } catch (error) {
@@ -310,7 +280,7 @@ export const createGame = async (req: Request, res: Response) => {
 
     // Handle thumbnail
     //@ts-ignore
-    const thumbnailPath = req.file ? `/uploads/${req.file.filename}` : null;
+    const thumbnailPath = req.file ? `http://localhost:8000/uploads/${req.file.filename}` : null;
     console.log(">>>>>>>>>>>>>>>>>>>>>>>", thumbnailPath);
 
     const game = await Game.create({
@@ -325,6 +295,22 @@ export const createGame = async (req: Request, res: Response) => {
     for (const genreId of genres) {
       await GameGenre.create({ game_id: game.id, genre_id: genreId });
     }
+
+    await client.index({
+      index: "games",
+      id: game.id,
+      body: {
+        title: game.title,
+        description: game.description,
+        release_date: game.release_date,
+        publisher: game.publisher,
+        thumbnail: game.thumbnail,
+        created_by: game.created_by,
+        avg_user_rating: 0.0,
+        view_count: 0,
+        genres: genres,
+      },
+    });
 
     res.status(201).json(game);
   } catch (error) {
@@ -388,23 +374,59 @@ export const createGameCustom = async (req: Request, res: Response) => {
 };
 
 export const updateGame = async (req: Request, res: Response) => {
-  const errors = validationResult(req);
-  if (!errors.isEmpty()) {
-    return res.status(400).json({ errors: errors.array() });
-  }
+  // const errors = validationResult(req);
+  // if (!errors.isEmpty()) {
+  //   return res.status(400).json({ errors: errors.array() });
+  // }
+
   try {
     const { id } = req.params;
-    const { title, description, release_date, publisher, thumbnail } = req.body;
+    let { title, description, release_date, publisher, genres } = req.body;
     const game = await Game.findByPk(id);
+
     if (!game) {
       return res.status(404).json({ error: "Game not found" });
     }
+
+    if (typeof genres === "string") {
+      genres = JSON.parse(genres);
+    }
+
+    if (genres && genres.length === 0) {
+      return res.status(400).json({ error: "At least one genre is required" });
+    }
+    const newReleaseDate = new Date(release_date);
     game.title = title;
     game.description = description;
-    game.release_date = release_date;
+    //@ts-ignore
+    game.release_date = newReleaseDate.toISOString();
     game.publisher = publisher;
-    game.thumbnail = thumbnail;
+
+    //@ts-ignore
+    game.thumbnail = req.file ? `http://localhost:8000/uploads/${req.file.filename}` : game.thumbnail;
+
     await game.save();
+    if (genres) {
+      await GameGenre.destroy({ where: { game_id: id } });
+      for (const genreId of genres) {
+        await GameGenre.create({ game_id: game.id, genre_id: genreId });
+      }
+    }
+    await client.update({
+      index: "games",
+      id: game.id,
+      body: {
+        doc: {
+          title: game.title,
+          description: game.description,
+          release_date: game.release_date,
+          publisher: game.publisher,
+          thumbnail: game.thumbnail,
+          genres: genres,
+        },
+      },
+    });
+
     res.json(game);
   } catch (error) {
     console.error(error);
@@ -419,7 +441,12 @@ export const deleteGame = async (req: Request, res: Response) => {
     if (!game) {
       return res.status(404).json({ error: "Game not found" });
     }
+    const gameId = game.id;
     await game.destroy();
+    await client.delete({
+      index: "games",
+      id: gameId,
+    });
     res.json({ message: "Game deleted successfully" });
   } catch (error) {
     console.error(error);

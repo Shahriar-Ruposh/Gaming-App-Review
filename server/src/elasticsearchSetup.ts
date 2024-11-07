@@ -1,9 +1,7 @@
 import client from "./config/elasticSearch";
-
 const createGameIndex = async () => {
   const index = "games";
   const exists = await client.indices.exists({ index });
-
   if (!exists) {
     await client.indices.create({
       index,
@@ -13,13 +11,12 @@ const createGameIndex = async () => {
             title: { type: "text" },
             description: { type: "text" },
             release_date: { type: "date" },
-            publisher: { type: "keyword" },
+            publisher: { type: "text" },
             thumbnail: { type: "text" },
-            genres: { type: "keyword" }, // Stores genre names as keywords
-            created_by: { type: "keyword" },
+            created_by: { type: "text" },
+            avg_user_rating: { type: "float" },
             view_count: { type: "integer" },
-            popularity_score: { type: "integer" },
-            trending_score: { type: "integer" },
+            genres: { type: "text" },
           },
         },
       },
@@ -29,5 +26,14 @@ const createGameIndex = async () => {
     console.log(`Index "${index}" already exists.`);
   }
 };
-
 export default createGameIndex;
+
+// title: { type: "text" },//
+// description: { type: "text" },//
+// release_date: { type: "date" },//
+// publisher: { type: "keyword" },//
+// thumbnail: { type: "text" },//
+// genres: { type: "keyword" }, //
+// created_by: { type: "keyword" },//
+// view_count: { type: "integer" },//
+// avg_user_rating: { type: "float" },//

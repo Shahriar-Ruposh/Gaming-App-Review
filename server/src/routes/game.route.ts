@@ -16,7 +16,7 @@ router.get("/", getAllGames);
 router.get("/:id", trackUser, getGameById);
 
 router.post("/", authenticate, upload.single("thumbnail"), createGame); // Use `upload` instance from upload.ts
-router.put("/:id", updateGameValidator, authenticate, updateGame);
+router.put("/:id", authenticate, upload.single("thumbnail"), updateGame);
 router.delete("/:id", authenticate, deleteGame);
 
 export default router;
