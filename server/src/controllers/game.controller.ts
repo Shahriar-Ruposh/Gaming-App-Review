@@ -269,7 +269,7 @@ export const createGame = async (req: Request, res: Response) => {
   try {
     let { title, description, release_date, publisher, genres } = req.body;
     const userId = req.user?.userId.toString();
-
+    const genreName = [];
     if (!genres || genres.length === 0) {
       return res.status(400).json({ error: "At least one genre is required" });
     }
@@ -298,6 +298,12 @@ export const createGame = async (req: Request, res: Response) => {
 
     for (const genreId of genres) {
       await GameGenre.create({ game_id: game.id, genre_id: genreId });
+
+      const genre = await Genre.findByPk(genreId);
+
+      if (genre) {
+        genreName.push(genre.name);
+      }
     }
 
     await client.index({
@@ -312,7 +318,7 @@ export const createGame = async (req: Request, res: Response) => {
         created_by: game.created_by,
         avg_user_rating: 0.0,
         view_count: 0,
-        genres: genres,
+        genres: genreName,
       },
     });
 
