@@ -190,10 +190,10 @@ export const getMyGames = async (req: Request, res: Response) => {
     let userId = req.user?.userId.toString();
 
     const offset = (Number(page) - 1) * Number(limit);
-    const where: any = {};
+    const where: any = { created_by: userId }; // Apply user filter here
 
     if (search) {
-      where.title = { [Op.iLike]: `%${search}%` };
+      where.title = { [Op.iLike]: `%${search}%` }; // Search filter on title
     }
 
     if (min_score && max_score) {
@@ -205,7 +205,7 @@ export const getMyGames = async (req: Request, res: Response) => {
     }
 
     if (genre && typeof genre === "string") {
-      genre.toString().toLowerCase();
+      genre = genre.toString().toLowerCase();
       if (genre === "all-games") {
         genre = undefined;
       }
@@ -214,7 +214,7 @@ export const getMyGames = async (req: Request, res: Response) => {
     const genreWhere = genre ? { name: { [Op.iLike]: `%${genre}%` } } : undefined;
 
     const games = await Game.findAll({
-      where: { created_by: userId },
+      where, // Use the combined `where` object including created_by and search filters
       limit: Number(limit),
       offset,
       include: [
