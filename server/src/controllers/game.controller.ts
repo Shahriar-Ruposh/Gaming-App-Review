@@ -30,7 +30,7 @@ export const getAllGames = async (req: Request, res: Response) => {
     const publisher = req.query.publisher ? (req.query.publisher as string) : "";
     const releaseYear = req.query.releaseDate ? parseInt(req.query.releaseDate as string) : undefined;
     const sortByRating = req.query.sortByRating === "asc" || req.query.sortByRating === "desc" ? req.query.sortByRating : null;
-    console.log("sortByRating>>>>>>>>>>>>>>>>>>", sortByRating);
+    // console.log("sortByRating>>>>>>>>>>>>>>>>>>", sortByRating);
     const elasticQuery: any = {
       index: "games",
       from: offset,
